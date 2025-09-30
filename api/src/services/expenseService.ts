@@ -1,4 +1,3 @@
-import AuthService from "../auth/authService";
 import ValidationError from "../errors/ValidationError";
 import ExpenseCreateRequest, { validateExpenseRequest } from "../interfaces/expenseInterfaces/ExpenseCreateRequest";
 import ExpenseCreateResponse from "../interfaces/expenseInterfaces/ExpenseCreateResponse";
@@ -18,9 +17,7 @@ import ExpenseRepository from "../repositories/expenseRepository";
                 errors:errors
             })
         }
-       
         const result = await this.expenseRepository.create({...expenseReq,user:userId})
-
         const data= new ExpenseCreateResponse({
             id:result._id.toString(),
             expense_type:result.expense_type as EXPENSE_TYPE,
@@ -76,11 +73,11 @@ import ExpenseRepository from "../repositories/expenseRepository";
         }
     }
 
-    async listOfExpense(userId:string){
-        const result =await this.expenseRepository.findAll(userId) 
+    async listOfExpense(userId:string,options:any){
+        const result =await this.expenseRepository.findAll(userId,options) 
         if(result){
             const list:any=[]
-            result.forEach(data=>{
+            result.data.forEach(data=>{
                 const exp=new ExpenseCreateResponse({
                     id:data._id.toString(),
                     expense_type:data.expense_type,
@@ -89,8 +86,13 @@ import ExpenseRepository from "../repositories/expenseRepository";
                     date:data.createdAt
                 })
                 list.push(exp)
-            })
-            return list;
+            })            
+            return{
+                list,
+                total:result.total,
+                page:result.page,
+                totalPages:result.totalPages
+            } 
         }
     }
 }

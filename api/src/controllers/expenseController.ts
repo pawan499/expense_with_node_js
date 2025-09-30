@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import ExpenseService from "../services/expenseService";
 import ApiResponse from "../utils/ApiResponse";
+import { parseListQuery } from "../utils/queryparser";
 
 export default class ExpenseController{
     private expenseService:ExpenseService
@@ -10,9 +11,7 @@ export default class ExpenseController{
     }
     async createExpense(req:Request,res:Response){
         const expense=req.body;
-        const userId= (req as any).user.id
-        console.log("userId====",userId);
-        
+        const userId= (req as any).user.id     
         const result= await this.expenseService.createExpense(expense,userId)
         res.status(201).json(ApiResponse.successResponse({
             status:201,
@@ -23,8 +22,9 @@ export default class ExpenseController{
 
     async listExpense(req:Request,res:Response){
         const id=(req as any).user.id
+        const options = parseListQuery(req, "expenses");
         console.log(id);
-        const result= await this.expenseService.listOfExpense(id);
+        const result= await this.expenseService.listOfExpense(id,options);
 
         res.status(200).json(ApiResponse.successResponse({
             status:200,
