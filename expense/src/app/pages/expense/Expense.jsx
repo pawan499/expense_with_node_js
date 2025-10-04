@@ -271,11 +271,11 @@ const Expense = () => {
           </Stack>
         </TableContainer>
       )}
-      <DataGrid
+      {/* <DataGrid
         columns={columns}
         rows={expenses}
         disableRowSelectionOnClick={true}
-      />
+      /> */}
       <ConfirmDialog open={open} onClose={handleClose} onConfirm={confirmDelete} title="Confirm Delete" content="Are you sure you want to delete this expense?" />
       <ComanModal open={modalOpen} onClose={onClose} children={<ExpenseForm formData={formData} setFormData={setFormData} errors={errors} setErrors={setErrors} />} onSubmit={handleSubmit} title={title} />
     </div>

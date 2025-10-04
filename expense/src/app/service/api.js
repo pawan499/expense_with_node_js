@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:4200/api",
+  baseURL: "http://192.168.31.55:4200/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -27,7 +27,7 @@ api.interceptors.response.use(
         debugger
         const parseData = JSON.parse(data);
         try {
-          const res = await axios.post("http://localhost:4200/api/auth/refresh", {
+          const res = await axios.post("http://192.168.31.55:4200/api/auth/refresh", {
             refreshToken: parseData.refreshToken
           });
           const data=res?.data?.data
