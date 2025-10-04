@@ -13,17 +13,19 @@ import TextField from "@mui/material/TextField";
 import IconButton from "@mui/material/IconButton";
 import SendIcon from "@mui/icons-material/Send";
 import { AuthContext } from "../../context/AuthContext";
+import { io } from "socket.io-client";
+
+const socket = io("http://192.168.31.55:4200");
 
 const Chat = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
-  const [senderId, setSenderId] = useState("")
-  const [receiverId, setReceiverId] = useState("")
-  const { userData } = useContext(AuthContext)
-  const [unReadCount, setUnreadCount] = useState()
-
+  const [senderId, setSenderId] = useState("");
+  const [receiverId, setReceiverId] = useState("");
+  const { userData } = useContext(AuthContext);
+  const [unReadCount, setUnreadCount] = useState([]);
 
   const getUsers = async () => {
     const result = await api.get("/user");
@@ -34,60 +36,73 @@ const Chat = () => {
   };
 
   const getunreadCount = async (userId) => {
-    const result = await api.get(`/message/${userId}`)
-    console.log("count", result?.data?.data);
-    setUnreadCount(result?.data?.data)
-  }
+    const result = await api.get(`/message/${userId}`);
+    setUnreadCount(result?.data?.data);
+  };
 
   useEffect(() => {
-    setSenderId(userData?.user?.id)
-    getunreadCount(userData?.user?.id)
+    if (userData?.user?.id) {
+      setSenderId(userData.user.id);
+      socket.emit("joinRoom", userData.user.id);
+      getunreadCount(userData.user.id);
+    }
     getUsers();
   }, [userData]);
 
+  useEffect(() => {
+    socket.on("receiveMessage", (message) => {
+      if (
+        message.senderId === selectedUser?.id ||
+        message.receiverId === selectedUser?.id
+      ) {
+        setMessages((prev) => [...prev, message]);
+      }
+      getunreadCount(userData?.user?.id);
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+    };
+  }, [selectedUser, userData]);
+
   const handleUserClick = async (user) => {
-    const loginUser = userData?.user;
     setSelectedUser(user);
-    setReceiverId(user?.id)
+    setReceiverId(user?.id);
     const result = await api.get("/message", {
       params: {
-        senderId: loginUser.id,
-        receiverId: user.id
-      }
-    })
-    if(result){
-      await api.put("/message",{
-        receiverId:loginUser.id,
-        senderId:user?.id,
-        updateData:{
-          read:true
-        }
-      })
+        senderId: userData.user.id,
+        receiverId: user.id,
+      },
+    });
+    if (result) {
+      await api.put("/message", {
+        receiverId: userData.user.id,
+        senderId: user?.id,
+        updateData: { read: true },
+      });
     }
-    console.log(result);
-    const messages = result?.data?.data
-    console.log("messages", messages);
-    setMessages(messages)
+    const messages = result?.data?.data;
+    setMessages(messages);
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault()
+  const handleSend = (e) => {
+    e.preventDefault();
     if (!newMsg.trim()) return;
-    const result = await api.post("/message", {
+
+    const msgData = {
       message: newMsg,
       senderId: senderId,
-      receiverId: receiverId
-    })
+      receiverId: receiverId,
+      read: false,
+    };
 
-    console.log("data message", result?.data?.data);
-    const messageData = result?.data?.data
-    setMessages((prev) => [...prev, messageData]);
+    socket.emit("sendMessage", msgData);
+    setMessages((prev) => [...prev, msgData]);
     setNewMsg("");
   };
 
   return (
     <Box sx={{ display: "flex", height: "90vh", bgcolor: "#f9f9f9" }}>
-      {/* Left Sidebar */}
       <Paper
         elevation={3}
         sx={{
@@ -123,17 +138,15 @@ const Chat = () => {
                   primary={user?.name}
                   secondary="Click to chat"
                   primaryTypographyProps={{ fontWeight: "500" }}
-                />{
-
-                }
-                {
-                  unReadCount?.map(unr => {
-                    return Object.keys(unr)[0] === user?.id ? <ListItemText key={unr}>
+                />
+                {unReadCount?.map((unr) =>
+                  Object.keys(unr)[0] === user?.id ? (
+                    <ListItemText key={unr}>
                       <div
                         style={{
                           backgroundColor: "#039637",
                           maxWidth: "15px",
-                          widthWidth: "15px",
+                          width: "15px",
                           padding: "5px",
                           textAlign: "center",
                           alignItems: "center",
@@ -141,12 +154,16 @@ const Chat = () => {
                           display: "flex",
                           justifyContent: "center",
                           color: "white",
-                          fontSize: "10px"
+                          fontSize: "10px",
                         }}
-                      >{unr[Object.keys(unr)[0]]}</div>
-                    </ListItemText> : ""
-                  })
-                }
+                      >
+                        {unr[Object.keys(unr)[0]]}
+                      </div>
+                    </ListItemText>
+                  ) : (
+                    ""
+                  )
+                )}
               </ListItem>
               <Divider />
             </React.Fragment>
@@ -154,11 +171,9 @@ const Chat = () => {
         </List>
       </Paper>
 
-      {/* Right Chat Window */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {selectedUser ? (
           <>
-            {/* Chat Header */}
             <Paper
               elevation={1}
               sx={{
@@ -174,7 +189,6 @@ const Chat = () => {
               <Typography variant="h6">{selectedUser?.name}</Typography>
             </Paper>
 
-            {/* Messages */}
             <Box
               sx={{
                 flex: 1,
@@ -205,13 +219,11 @@ const Chat = () => {
               ))}
             </Box>
 
-            {/* Input Box */}
             <form>
               <Paper
                 elevation={3}
                 sx={{ p: 1, display: "flex", alignItems: "center" }}
               >
-
                 <TextField
                   fullWidth
                   placeholder="Type a message..."
@@ -223,7 +235,6 @@ const Chat = () => {
                 <IconButton type="submit" color="primary" onClick={handleSend}>
                   <SendIcon />
                 </IconButton>
-
               </Paper>
             </form>
           </>
