@@ -34,7 +34,12 @@ export default class MessageRepository {
         })
     }
 
-    async updateAll(receiverId:string,updateData:any){
-        return await Message.updateMany({receiverId:new Types.ObjectId(receiverId)},{$set:updateData})
-    }
+    async updateAll(receiverId: string,senderId:string, updateData: any) {
+        console.log("repo",receiverId,updateData);
+        
+    return await Message.updateMany(
+        { receiverId: new Types.ObjectId(receiverId),senderId:new Types.ObjectId(senderId) },
+        { $set: updateData }
+    );
+}
 }

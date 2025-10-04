@@ -20,7 +20,8 @@ const messageSchema= new mongoose.Schema({
 
     read:{
         type:Boolean,
-        required:true
+        required:true,
+        default:false
     }
 
 },{timestamps:true})

@@ -22,7 +22,7 @@ const Chat = () => {
   const [senderId, setSenderId] = useState("")
   const [receiverId, setReceiverId] = useState("")
   const { userData } = useContext(AuthContext)
-  const [unReadCount,setUnreadCount]=useState()
+  const [unReadCount, setUnreadCount] = useState()
 
 
   const getUsers = async () => {
@@ -33,11 +33,11 @@ const Chat = () => {
     }
   };
 
-const getunreadCount= async(userId)=>{
-  const result = await api.get(`/message/${userId}`)
-  console.log("count", result?.data?.data);
-  setUnreadCount(result?.data?.data)
-}
+  const getunreadCount = async (userId) => {
+    const result = await api.get(`/message/${userId}`)
+    console.log("count", result?.data?.data);
+    setUnreadCount(result?.data?.data)
+  }
 
   useEffect(() => {
     setSenderId(userData?.user?.id)
@@ -55,6 +55,15 @@ const getunreadCount= async(userId)=>{
         receiverId: user.id
       }
     })
+    if(result){
+      await api.put("/message",{
+        receiverId:loginUser.id,
+        senderId:user?.id,
+        updateData:{
+          read:true
+        }
+      })
+    }
     console.log(result);
     const messages = result?.data?.data
     console.log("messages", messages);
@@ -115,29 +124,29 @@ const getunreadCount= async(userId)=>{
                   secondary="Click to chat"
                   primaryTypographyProps={{ fontWeight: "500" }}
                 />{
-                  
+
                 }
-             {
-              unReadCount?.map(unr=>{
-            return     Object.keys(unr)[0]===user?.id?<ListItemText  key={unr}>
-                    <div
-                      style={{
-                        backgroundColor:"#039637",
-                        maxWidth:"15px",
-                        widthWidth:"15px",
-                        padding:"5px",
-                        textAlign:"center",
-                        alignItems:"center",
-                        borderRadius:"50%",
-                        display:"flex",
-                        justifyContent:"center",
-                        color:"white",
-                        fontSize:"10px"
-                      }}
-                    >{unr[Object.keys(unr)[0]]}</div>
-                </ListItemText>:""
-              })
-             }
+                {
+                  unReadCount?.map(unr => {
+                    return Object.keys(unr)[0] === user?.id ? <ListItemText key={unr}>
+                      <div
+                        style={{
+                          backgroundColor: "#039637",
+                          maxWidth: "15px",
+                          widthWidth: "15px",
+                          padding: "5px",
+                          textAlign: "center",
+                          alignItems: "center",
+                          borderRadius: "50%",
+                          display: "flex",
+                          justifyContent: "center",
+                          color: "white",
+                          fontSize: "10px"
+                        }}
+                      >{unr[Object.keys(unr)[0]]}</div>
+                    </ListItemText> : ""
+                  })
+                }
               </ListItem>
               <Divider />
             </React.Fragment>
@@ -187,8 +196,8 @@ const getunreadCount= async(userId)=>{
                     py: 1,
                     borderRadius: 2,
                     maxWidth: "60%",
-                    wordBreak: "break-word",   
-                    whiteSpace: "pre-wrap",    
+                    wordBreak: "break-word",
+                    whiteSpace: "pre-wrap",
                   }}
                 >
                   {msg.message}

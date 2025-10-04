@@ -2,7 +2,8 @@ import chalk from "chalk"
 import app from "./app"
 import dotenv from 'dotenv'
 import { connectDb } from "./config/db"
-
+import http from "http";
+import Message from "./models/Message"; 
 dotenv.config()
 
 

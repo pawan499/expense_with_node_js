@@ -66,7 +66,7 @@ export default class MessageService {
         return arr
     }
 
-    async updateMessages(receiverId:string,updateData:any){
-        return await this.messageRepository.updateAll(receiverId,updateData)
+    async updateMessages(receiverId:string,senderId:string,updateData:any){
+        return await this.messageRepository.updateAll(receiverId,senderId,updateData)
     }
 }

@@ -50,11 +50,11 @@ export default class MessageController {
     }
 
     async updateAllMessage(req:Request,res:Response){
-        const {receiverId,updateData}=req?.body
+        const {receiverId,senderId,updateData}=req?.body
 
         console.log(req?.body);
         
-        const result = await this.messageService.updateMessages(receiverId as string,updateData)
+        const result = await this.messageService.updateMessages(receiverId as string,senderId as string,updateData)
         res.status(200).json(ApiResponse.successResponse({
             status:200,
             message:"updated",
